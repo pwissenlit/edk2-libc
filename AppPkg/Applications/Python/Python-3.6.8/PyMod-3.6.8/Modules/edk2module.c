@@ -4,6 +4,12 @@
 
     Copyright (c) 2015, Daryl McDaniel. All rights reserved.<BR>
     Copyright (c) 2011 - 2021, Intel Corporation. All rights reserved.<BR>
+
+    
+    EfiPy part derived from EfiPyMain.c in Python 2.7.2
+        Copyright (C) 2014 - 2022 efipy.core@gmail.com All rights reserved.
+
+
     This program and the accompanying materials are licensed and made available under
     the terms and conditions of the BSD License that accompanies this distribution.
     The full text of the license may be found at
@@ -24,6 +30,8 @@
 #include  <Uefi.h>
 #include  <Library/UefiLib.h>
 #include  <Library/UefiRuntimeServicesTableLib.h>
+#include  <Library/UefiBootServicesTableLib.h>
+
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,6 +42,15 @@ PyDoc_STRVAR(edk2__doc__,
              standardized by the C Standard and the POSIX standard (a thinly\n\
              disguised Unix interface).  Refer to the library manual and\n\
              corresponding UEFI Specification entries for more information on calls.");
+
+
+//
+// EfiPy extension for Python 3.6.8 port
+//
+#ifndef EFIPY
+  /* Comment to skip EfiPy */
+  #define EFIPY 1
+#endif
 
 #ifndef Py_USING_UNICODE
   /* This is used in signatures of functions. */
@@ -3800,6 +3817,168 @@ edk2_abort(PyObject *self, PyObject *noargs)
     return NULL;
 }
 
+
+
+#ifdef EFIPY
+/* #########################    EfiPY   ############################ */
+/* #########################    START   ############################ */
+
+int EfiPy_Processor_Init (PyObject *Module)
+{
+    int       ret;
+
+    #define EFIPY_MDE_CPU_IA32    0
+    #define EFIPY_MDE_CPU_IPF     1
+    #define EFIPY_MDE_CPU_X64     2
+    #define EFIPY_MDE_CPU_ARM     3
+    #define EFIPY_MDE_CPU_AARCH64 4
+    #define EFIPY_MDE_CPU_EBC     5
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_IA32);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_IPF);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_X64);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_ARM);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_AARCH64);
+    if (ret != 0) {
+        return ret;
+    }
+
+    ret = PyModule_AddIntMacro (Module, EFIPY_MDE_CPU_EBC);
+    if (ret != 0) {
+        return ret;
+    }
+
+    #if defined (MDE_CPU_IA32)
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_IA32);
+    #elif defined (MDE_CPU_IPF) 
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_IPF);
+    #elif defined (MDE_CPU_X64)
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_X64);
+    #elif defined (MDE_CPU_ARM)
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_ARM);
+    #elif defined (MDE_CPU_AARCH64)
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_AARCH64);
+    #elif defined (MDE_CPU_EBC)
+    ret = PyModule_AddIntConstant (Module, "EFIPY_MDE_CPU_TYPE", EFIPY_MDE_CPU_EBC);
+    #else
+    #error Unknown Processor Type
+    #endif
+
+    if (ret != 0) {
+        return ret;
+    }
+
+    return ret;
+
+} // EfiPy_Processor_Init
+
+
+int EfiPy_Constant_Init (PyObject *Module)
+{
+
+    int       ret;
+    PyObject *PyObject_MAX_BIT;
+    PyObject *PyObject_MAX_2_BITS;
+    PyObject *PyObject_MAX_ADDRESS;
+    PyObject *PyObject_CPU_STACK_ALIGNMENT;
+    PyObject *PyObject_gImageHandle;
+    PyObject *PyObject_gST;
+    PyObject *PyObject_gRT;
+    PyObject *PyObject_gBS;
+
+    //
+    // ProcessorBind
+    //
+
+    PyObject_MAX_BIT              = PyLong_FromUnsignedLongLong (MAX_BIT);
+    Py_INCREF (PyObject_MAX_BIT);
+    ret = PyModule_AddObject (Module, "MAX_BIT", PyObject_MAX_BIT);
+    if (ret != 0) {
+        return ret;
+    }
+
+    PyObject_MAX_2_BITS           = PyLong_FromUnsignedLongLong (MAX_2_BITS);
+    Py_INCREF (PyObject_MAX_2_BITS);
+    ret = PyModule_AddObject (Module, "MAX_2_BITS", PyObject_MAX_2_BITS);
+    if (ret != 0) {
+        return ret;
+    }
+
+    PyObject_MAX_ADDRESS          = PyLong_FromUnsignedLongLong (MAX_ADDRESS);
+    Py_INCREF (PyObject_MAX_ADDRESS);
+    ret = PyModule_AddObject (Module, "MAX_ADDRESS", PyObject_MAX_ADDRESS);
+    if (ret != 0) {
+        return ret;
+    }
+
+    PyObject_CPU_STACK_ALIGNMENT  = PyLong_FromUnsignedLongLong (CPU_STACK_ALIGNMENT);
+    Py_INCREF (PyObject_CPU_STACK_ALIGNMENT);
+    ret = PyModule_AddObject (Module, "CPU_STACK_ALIGNMENT", PyObject_CPU_STACK_ALIGNMENT);
+    if (ret != 0) {
+        return ret;
+    }
+
+    //
+    // Process Handles
+    //
+
+    PyObject_gImageHandle         = PyLong_FromVoidPtr(&gImageHandle);
+    Py_INCREF (PyObject_gImageHandle);
+    ret = PyModule_AddObject (Module, "gImageHandle", PyObject_gImageHandle);
+    if (ret != 0) {
+        return ret;
+    }
+
+    //
+    // Table address
+    //
+
+    PyObject_gST                  = PyLong_FromVoidPtr(gST);
+    Py_INCREF (PyObject_gST);
+    ret = PyModule_AddObject (Module, "EfiPygStAddr", PyObject_gST);
+    if (ret != 0) {
+        return ret;
+    }
+
+    PyObject_gRT                  = PyLong_FromVoidPtr(gRT);
+    Py_INCREF (PyObject_gRT);
+    ret = PyModule_AddObject (Module, "EfiPygRtAddr", PyObject_gRT);
+    if (ret != 0) {
+        return ret;
+    }
+
+    PyObject_gBS                  = PyLong_FromVoidPtr(gBS);
+    Py_INCREF (PyObject_gBS);
+    ret = PyModule_AddObject (Module, "EfiPygBsAddr", PyObject_gBS);
+    if (ret != 0) {
+        return ret;
+    }
+
+    return ret;
+
+} // EfiPy_Constant_Init
+
+/* #########################    EFIPY   ############################ */
+/* #########################     END    ############################ */
+#endif // #ifndef EFIPY
+
+
 static PyMethodDef edk2_methods[] = {
     {"access",          edk2_access,     METH_VARARGS, edk2_access__doc__},
 #ifdef HAVE_TTYNAME
@@ -4336,6 +4515,19 @@ PyEdk2__Init(void)
     //Py_INCREF((PyObject*) &StatVFSResultType);
     //PyModule_AddObject(m, "statvfs_result",
     //                   (PyObject*) &StatVFSResultType);
+
+#ifdef EFIPY
+    if (0 != EfiPy_Constant_Init(m)) {
+        Py_DECREF (m);
+        return NULL;
+    }
+
+    if (0 != EfiPy_Processor_Init(m)) {
+        Py_DECREF (m);
+        return NULL;
+    }
+#endif // EFIPY
+
     initialized = 1;
 	return m;
 

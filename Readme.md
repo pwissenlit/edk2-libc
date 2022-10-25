@@ -1,3 +1,28 @@
+# Additions That Come With This Fork
+
+This fork simply adds the Python 3 port of [EfiPy](http://efipy.blogspot.com/) to EDK2-Libc Python module.
+The original project was developed by [Max Wu](https://www.linkedin.com/in/max-wu-a9068b90/) and most of the code base remain unchanged. Please, have a look at his website for more information about it. :)
+
+## How To Compile
+
+**Important: Use Visual Studio to compile the project!** EDK2-Libc doesn't currently offer the build environment to compile the ctypes module (which is needed by EfiPy) with GCC.
+
+- Set up your EDK2 workspace as usual (more information [here](https://github.com/tianocore/tianocore.github.io/wiki/Windows-systems))
+- Clone this repo and copy the folders in your EDK2 workspace
+- Execute the following commands:
+
+```
+> cd AppPkg/Applications/Python/Python-3.6.8/
+> py.exe srcprep.py
+> build -a X64 -b RELEASE -p AppPkg/AppPkg.dsc -m AppPkg/Applications/Python/Python-3.6.8/Python368.inf
+> create_python368_pkg.bat VS2019 RELEASE X64 Output_folder
+```
+
+This should generate a `EFI` folder that can be pasted on a USB key.
+
+**Note**: You may also want to add Chipsec modifications to Python3 by following this [documentation](https://chipsec.github.io/installation/USB%20with%20UEFI%20Shell.html#optional-extending-chipsec-uefi-python-3-6-8-functionality).
+
+
 # EDK II LIBC Project
 
 The edk2-libc repository is part of the EDK II Project that is a modern,
